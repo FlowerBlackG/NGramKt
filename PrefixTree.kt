@@ -10,11 +10,14 @@
 */
 
 
+/**
+ * 字典树节点。
+ */
 internal data class PrefixTreeNode(
     /** 记录到当前位置为止表示的词登记了多少次。 */
     var counter: Long = 0L,
 
-    /** 指向后续节点的索引。 */
+    /** 指向后续节点的索引。Java HashMap 是基于红黑树的，性能优越。 */
     val link: HashMap<Char, PrefixTreeNode> = HashMap()
 ) {
     fun clear() {
@@ -40,11 +43,16 @@ class PrefixTree {
      */
     fun put(str: String, ignoreDepth: Int = 0): PrefixTree {
 
+        /** 当前指向的节点。 */
         var curr = root
+
+        /** 当前位置在树中的深度。 */
         var currDepth = 0
+
         str.forEach { ch ->
             if ( !curr.link.contains(ch) ) {
 
+                // 如果字典树里没有登记过这条路径，就先登记。
                 curr.link[ch] = PrefixTreeNode()
 
             }
@@ -85,7 +93,7 @@ class PrefixTree {
             }
         }
 
-        if (currDepth < depth) {
+        if (currDepth < depth) { // root 节点的计数永远是 0. 想要返回 0，把“当前节点”设成 root 就是了。
             currNode = root
         }
 

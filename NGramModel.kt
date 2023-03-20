@@ -36,20 +36,21 @@ class NGramModel constructor(
             val windowSize = min(n, sentence.length)
 
             for (idx in 0 .. sentence.length - min(2, windowSize)) {
-                val windowStr = sentence.substring(idx, min(sentence.length, idx + windowSize))
-                prefixTree.put(windowStr, min(2, windowStr.length) - 1)
+                val windowStr = sentence.substring(idx, min(sentence.length, idx + windowSize)) // 截取窗口内的字串。
+                prefixTree.put(windowStr, min(2, windowStr.length) - 1) // 登记到字典。
             }
-        }
 
-    }
+        } // end of for (sentence in sentences)
+
+    } // end of fun train(sentences: List<String>)
 
 
     fun dump(filename: String) {
-        // todo
+        // todo: 懒得写了。
     }
 
     fun load(filename: String) {
-        // todo
+        // todo: 懒得写了。
     }
 
     /**
@@ -58,7 +59,7 @@ class NGramModel constructor(
     private fun String.isPureDigitsAndEnglishLetters(): Boolean {
         for (ch in this) {
             if (!ch.isEnglishLetterOrDigit()) {
-                return false
+                return false // 只要有任何一个字符不是英文字母或数字，整句就不是“纯英文字母和数字组成”的。
             }
         }
 
@@ -138,17 +139,24 @@ class NGramModel constructor(
 
 
                     if (maxMidPos == 0) { // 首次切割。要求不要太高。
-                        canPick = (leftOcc > maxOcc || rightOcc > maxOcc) && leftOcc + rightOcc >= 2 * maxOcc
-                    } else {
 
+                        canPick = (leftOcc > maxOcc || rightOcc > maxOcc) && leftOcc + rightOcc >= 2 * maxOcc
+
+                    } else { // 如果不是首次切分...
+
+                        // 只要满足以下可切分条件的任何一个，就认为当前这个点是可以切分的。
+
+                        // 切分后的子句出现次数和比之前登记的大一些，且左右词出现次数单独比较都没有降低太多。
                         canPick = leftOcc + rightOcc > maxOcc * 1.2 /* 放大系数 */
                                 && (
                                     (leftOcc > maxSplitLeft * 1.6 && rightOcc > maxSplitRight * 0.8)
                                             || (rightOcc > maxSplitRight * 2 && leftOcc > maxSplitLeft * 0.8)
                                 )
 
+                        // 原来左词出现次数是0，新方案里结果不是0了，且右词出现次数没有降低太多。
                         canPick = canPick || (maxSplitLeft == 0L && (leftOcc >= 0 && rightOcc > maxSplitRight * 0.4))
 
+                        // 左右词出现次数都有提升。
                         canPick = canPick || (leftOcc > maxSplitLeft && rightOcc >= maxSplitRight)
 
 
@@ -171,12 +179,13 @@ class NGramModel constructor(
                         maxSplitLeft = leftOcc
                         maxSplitRight = rightOcc
                         maxOcc = leftOcc + rightOcc
+
                         println("  -- picked ! --")
                     }
 
-                }
+                } // end of for (endPos in windowStr.length downTo  midPos + 1)
 
-            }
+            } // end of for (midPos in 1 until windowStr.length)
 
             // 实施切分，并登记。
 
@@ -190,9 +199,10 @@ class NGramModel constructor(
                 windowStartPos += maxMidPos
                 println("[info] extract: $subSegment")
             }
-        }
 
-    }
+        } // end of while (windowStartPos < segment.length)
+
+    } // end of private fun processSegment(segment: String, container: ArrayList<String>)
 
     /**
      * 切分一个句子。
@@ -200,8 +210,10 @@ class NGramModel constructor(
     fun process(sentence: String): List<String> {
         val res = ArrayList<String>()
 
+        // 预处理。
         val segments = sentence.toProcessedListForNGram()
 
+        // 对预处理后的每个子句依次分词。
         segments.forEach { segment ->
             processSegment(segment, res)
         }
